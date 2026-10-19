@@ -33,8 +33,8 @@ func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	fmt.Println("Peer connected:", conn.RemoteAddr())
+	buffer := make([]byte, 1024)
 	for {
-		buffer := make([]byte, 1024)
 		n, err := conn.Read(buffer)
 
 		if err != nil {
@@ -49,7 +49,7 @@ func handleConnection(conn net.Conn) {
 		message := string(buffer[:n])
 		fmt.Println("Received:", message)
 
-		response := "Hello, from node 1!"
+		response := "Hello, from node 1!\n"
 		_, err = conn.Write([]byte(response))
 		if err != nil {
 			fmt.Println("Failed to send response:", err)
