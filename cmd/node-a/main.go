@@ -43,7 +43,7 @@ func handleConnection(conn net.Conn) {
 				return
 			}	}
 
-			fmt.Println("Node A received: %s\n", string(buffer[:n]))
+			fmt.Println("Node A received: ", string(buffer[:n]))
 
 			_, err = conn.Write([]byte("Hello from NodeA!\n"))
 			if err != nil {
