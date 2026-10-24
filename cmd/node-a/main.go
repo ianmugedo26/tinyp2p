@@ -41,14 +41,17 @@ func handleConnection(conn net.Conn) {
 			} else {
 				fmt.Println("Read Error:", err)
 				return
-			}	}
-
-			fmt.Println("Node A received: ", string(buffer[:n]))
-
-			_, err = conn.Write([]byte("Hello from NodeA!\n"))
-			if err != nil {
-				fmt.Println("Write Error:", err)
-				return
 			}
 		}
+
+		fmt.Println("Node A received: ", string(buffer[:n]))
+
+		_, err = conn.Write([]byte("Hello from NodeA!\n"))
+		if err != nil {
+			fmt.Println("Write Error:", err)
+			return
+		}
 	}
+}
+
+
