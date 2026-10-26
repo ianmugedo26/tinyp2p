@@ -4,8 +4,27 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"bufio"
+	"encoding/json"
+	"crypto/sha256"
+	"encoding/binary"
 )
 
+const packageDir = "dist"
+
+type Request struct {
+	Type string `json:"type"`
+	Filename string `json:"filename"`
+}
+
+type Response struct {
+	OK bool `json:"ok"`
+	Size int64 `json:"size"`
+	SHA256 string `json:"sha256"`
+	Filename string `json:"filename"`
+	Error string `json:"error,omitempty"`
+}
 func main() {
 	listener, err := net.Listen("tcp", ":8001")
 	if err != nil {
@@ -20,7 +39,7 @@ func main() {
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("Failed to accept connection:", err)
-			return
+			continue
 		}
 		go handleConnection(conn)
 	}
