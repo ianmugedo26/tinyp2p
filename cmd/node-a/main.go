@@ -6,6 +6,8 @@ import (
 	"net"
 	"os"
 	"encoding/binary"
+	"bufio"
+	"strings"
 )
 
 func main() {
@@ -30,6 +32,25 @@ func main() {
 
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
+
+	reader := bufio.NewReader(conn)
+
+	request, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Print("Failed to read request:", err)
+		return
+	}
+
+	request = strings.TrimSpace(request)
+
+	if request != "GET demo-app-v1.0.0.tar.gz" {
+		fmt.Println("Unsupported request:", request)
+		fmt.Fprintln(conn, "ERROR")
+		return
+	}
+	fmt.Fprintln(conn, "OK")
+
+
 	fmt.Println("Connected to:", conn.RemoteAddr())
 
 	// open the package we want to distribute
