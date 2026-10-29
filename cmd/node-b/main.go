@@ -8,6 +8,8 @@ import (
 	"encoding/binary"
 	"crypto/sha256"
 	"path/filepath"
+	"bufio"
+	"strings"
 
 )
 
@@ -83,4 +85,27 @@ func main() {
 	fmt.Println("Package received:", outputPath)
 	fmt.Printf("SHA-256: %x\n", hash)
 
+	//sending request for the code
+
+	_, err = fmt.Fprintln(conn, "GET demo-app-v1.0.0.tar.gz")
+	if err != nil {
+		fmt.Println("Send the Request:", err)
+		return
+	}
+
+	// Read the provider's response
+	reader := bufio.NewReader(conn)
+
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Failed to read response:", err)
+		return
+	}
+
+	response = strings.TrimSpace(response)
+
+	if response != "OK" {
+		fmt.Println("Package request rejected:", response)
+		return
+	}
 }
