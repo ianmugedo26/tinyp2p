@@ -8,6 +8,8 @@ import (
 	"encoding/binary"
 	"bufio"
 	"strings"
+	"bytes"
+	"crypto/sha256"
 )
 
 func main() {
@@ -67,6 +69,25 @@ func handleConnection(conn net.Conn) {
 	if err != nil {
 		fmt.Println("Failed to get the package size:", err)
 		return
+	}
+
+	// calculate the package's SHA-256 hash
+
+	hasher := sha256.New()
+
+	_, err := io.Copy(hasher, file)
+	if err != nil {
+		fmt.Println("Failed to calculate package hash:", err)
+		return
+	}
+
+	expectedHash := hasher.Sum(nil)
+
+	// return to the begining of the file before sending it
+
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		fmt.Println("Failed to reset the package file:",err)
 	}
 
 	// send the file size as an 8-byte header
