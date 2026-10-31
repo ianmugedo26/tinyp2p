@@ -91,10 +91,16 @@ func handleConnection(conn net.Conn) {
 	}
 
 	// send the file size as an 8-byte header
-	size := uint64(info.Size())
+	_, err := io.Copy(conn, bytes.NewReader(expectedHash))
+	if err != nil {
+		fmt.Println("Failed to send package hash:", err)
+		return
+	}
+	size := uint64(info.size())
+
 	err = binary.Write(conn, binary.BigEndian, size)
 	if err != nil {
-		fmt.Println("Failed to send the file:", err)
+		fmt.Println("Failed to send file size:", err)
 		return
 	}
 
