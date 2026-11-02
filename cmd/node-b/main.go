@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"bufio"
 	"strings"
+	"bytes"
 
 )
 
@@ -25,6 +26,13 @@ func main() {
 
 	//Read the 8-byte file-size header
 	var size uint64
+
+	var expectedHash [sha256.Size]byte
+	_, err = io.ReadFull(conn, expectedHash[:])
+	if err != nil {
+		fmt.Println("Failed to read expected hash:", err)
+		return
+	}
 	err = binary.Read(conn, binary.BigEndian, &size)
 	if err != nil {
 		fmt.Println("Failed to read file size:", err)
@@ -77,9 +85,23 @@ func main() {
 	data, err := os.ReadFile(outputPath)
 	if err != nil {
 		fmt.Println("Failed to read received package:", err)
+		os.Remove(outputPath)
 		return
 	}
 
+	// Calculate The received package's SHA-256 hash
+	actualHash := sha256.Sum256(data)
+
+	// Compare the received hash with the expected hash
+
+	if !bytes.Equal(actualHash[:], expectedHash[:]) {
+		fmt.Println("PACKAGE VERIFICATION FAILED")
+		fmt.Println("Expected SHA-256: %x\n", expectedHash)
+		fmt.Println("Actual SHA-256: %x\n", actualHash)
+
+		os.Remove(outputPath)
+		return
+	}
 	hash := sha256.Sum256(data)
 
 	fmt.Println("Package received:", outputPath)
