@@ -1,15 +1,15 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
 	"os"
-	"encoding/binary"
-	"bufio"
 	"strings"
-	"bytes"
-	"crypto/sha256"
 )
 
 func main() {
@@ -39,8 +39,13 @@ func handleConnection(conn net.Conn) {
 
 	request, err := reader.ReadString('\n')
 	if err != nil {
-		fmt.Print("Failed to read request:", err)
+		if err == io.EOF {
+			fmt.Println("Peer disconnected before sending a request")
+		} else {
+			fmt.Print("Failed to read request:", err)
+		}
 		return
+
 	}
 
 	request = strings.TrimSpace(request)
@@ -51,7 +56,6 @@ func handleConnection(conn net.Conn) {
 		return
 	}
 	fmt.Fprintln(conn, "OK")
-
 
 	fmt.Println("Connected to:", conn.RemoteAddr())
 
@@ -75,7 +79,7 @@ func handleConnection(conn net.Conn) {
 
 	hasher := sha256.New()
 
-	_, err := io.Copy(hasher, file)
+	_, err = io.Copy(hasher, file)
 	if err != nil {
 		fmt.Println("Failed to calculate package hash:", err)
 		return
@@ -87,17 +91,16 @@ func handleConnection(conn net.Conn) {
 
 	_, err = file.Seek(0, 0)
 	if err != nil {
-		fmt.Println("Failed to reset the package file:",err)
+		fmt.Println("Failed to reset the package file:", err)
 	}
 
 	// send the file size as an 8-byte header
-	_, err := io.Copy(conn, bytes.NewReader(expectedHash))
+	_, err = io.Copy(conn, bytes.NewReader(expectedHash))
 	if err != nil {
 		fmt.Println("Failed to send package hash:", err)
 		return
 	}
-	size := uint64(info.size())
-
+	size := uint64(info.Size())
 	err = binary.Write(conn, binary.BigEndian, size)
 	if err != nil {
 		fmt.Println("Failed to send file size:", err)
@@ -106,7 +109,7 @@ func handleConnection(conn net.Conn) {
 
 	// Send exactly the number of byte in the package.
 
-	_, err = io.CopyN(conn, file,info.Size())
+	_, err = io.CopyN(conn, file, info.Size())
 	if err != nil {
 		fmt.Println("Failed to send the package:", err)
 	}
@@ -114,4 +117,3 @@ func handleConnection(conn net.Conn) {
 	fmt.Println("Package sent successfully:", info.Size(), "bytes")
 
 }
-

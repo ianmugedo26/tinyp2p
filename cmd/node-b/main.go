@@ -1,17 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"net"
-	"io"
-	"encoding/binary"
-	"crypto/sha256"
-	"path/filepath"
 	"bufio"
-	"strings"
 	"bytes"
-
+	"crypto/sha256"
+	"encoding/binary"
+	"fmt"
+	"io"
+	"net"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -42,11 +41,11 @@ func main() {
 	// Reject an unexpectedly large transfer.
 	const maxFileSize = 100 * 1024 * 1024
 	if size > maxFileSize {
-		fmt.Println ("Package is too large:", size, "bytes")
+		fmt.Println("Package is too large:", size, "bytes")
 		return
 	}
 
-	fmt.Println ("Package size:", size, "bytes")
+	fmt.Println("Package size:", size, "bytes")
 
 	// Create a destination directory for the file
 	err = os.MkdirAll("received", 0755)
@@ -74,11 +73,11 @@ func main() {
 		os.Remove(outputPath)
 		return
 	}
-	 if closeErr != nil {
+	if closeErr != nil {
 		fmt.Println("Failed to close destination file:", closeErr)
 		os.Remove(outputPath)
 		return
-	 }
+	}
 
 	// Calculate the received package's SHA256 hash
 
@@ -111,7 +110,7 @@ func main() {
 
 	_, err = fmt.Fprintln(conn, "GET demo-app-v1.0.0.tar.gz")
 	if err != nil {
-		fmt.Println("Send the Request:", err)
+		fmt.Println("Failed to Send the Request:", err)
 		return
 	}
 
