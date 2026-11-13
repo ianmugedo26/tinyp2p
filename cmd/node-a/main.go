@@ -38,6 +38,7 @@ func handleConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 
 	fmt.Println("Waiting on the request...")
+
 	request, err := reader.ReadString('\n')
 	if err != nil {
 		if err == io.EOF {
@@ -45,10 +46,11 @@ func handleConnection(conn net.Conn) {
 		} else {
 			fmt.Print("Failed to read request:", err)
 		}
-		fmt.Println("Received request:", request)
 		return
 
 	}
+
+	fmt.Println("Request received:", request)
 
 	request = strings.TrimSpace(request)
 
@@ -94,6 +96,7 @@ func handleConnection(conn net.Conn) {
 	_, err = file.Seek(0, 0)
 	if err != nil {
 		fmt.Println("Failed to reset the package file:", err)
+		return
 	}
 
 	// send the file size as an 8-byte header

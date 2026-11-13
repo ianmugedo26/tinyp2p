@@ -23,22 +23,54 @@ func main() {
 
 	fmt.Println("Connected to node A")
 
-	//Read the 8-byte file-size header
-	var size uint64
+	// Create a buffered reader for the connection.
+	reader := bufio.NewReader(conn)
 
+	//Send the package request
+
+	_, err = fmt.Fprintln(conn, "GET demo-app-v1.0.0.tar.gz")
+	if err != nil {
+		fmt.Println("Failed to send the request:", err)
+		return
+	}
+
+	// Read the provider's response
+
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Failed to read response:", err)
+		return
+	}
+
+	response = strings.TrimSpace(response)
+
+	if response != "OK" {
+		fmt.Println("Package request rejected", response)
+		return
+	}
+
+	fmt.Println("Package request accepted!")
+
+	// Read the expected SHA-256 hash.
 	var expectedHash [sha256.Size]byte
-	_, err = io.ReadFull(conn, expectedHash[:])
+
+	_, err = io.ReadFull(reader, expectedHash[:])
 	if err != nil {
 		fmt.Println("Failed to read expected hash:", err)
 		return
 	}
-	err = binary.Read(conn, binary.BigEndian, &size)
+
+	// Read the package size.
+	var size uint64
+
+	err = binary.Read(reader, binary.BigEndian, &size)
 	if err != nil {
 		fmt.Println("Failed to read file size:", err)
 		return
 	}
 
 	// Reject an unexpectedly large transfer.
+
 	const maxFileSize = 100 * 1024 * 1024
 	if size > maxFileSize {
 		fmt.Println("Package is too large:", size, "bytes")
@@ -62,35 +94,10 @@ func main() {
 		fmt.Println("Failed to create a destination file:", err)
 		return
 	}
-	fmt.Println("Sending package request...")
-	//sending request for the code
-
-	_, err = fmt.Fprintln(conn, "GET demo-app-v1.0.0.tar.gz")
-	if err != nil {
-		fmt.Println("Failed to Send the Request:", err)
-		return
-	}
-	fmt.Println("Package request sent; waiting on the package....")
-
-	// Read the provider's response
-	reader := bufio.NewReader(conn)
-
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		fmt.Println("Failed to read response:", err)
-		return
-	}
-
-	response = strings.TrimSpace(response)
-
-	if response != "OK" {
-		fmt.Println("Package request rejected:", response)
-		return
-	}
 
 	// Receive exactly the advertised number of bytes
 
-	_, copyErr := io.CopyN(out, conn, int64(size))
+	_, copyErr := io.CopyN(out, reader, int64(size))
 	closeErr := out.Close()
 
 	if copyErr != nil {
@@ -120,15 +127,10 @@ func main() {
 
 	if !bytes.Equal(actualHash[:], expectedHash[:]) {
 		fmt.Println("PACKAGE VERIFICATION FAILED")
-		fmt.Println("Expected SHA-256: %x\n", expectedHash)
-		fmt.Println("Actual SHA-256: %x\n", actualHash)
+		fmt.Printf("Expected SHA-256: %x\n", expectedHash)
+		fmt.Printf("Actual SHA-256: %x\n", actualHash)
 
 		os.Remove(outputPath)
 		return
 	}
-	hash := sha256.Sum256(data)
-
-	fmt.Println("Package received:", outputPath)
-	fmt.Printf("SHA-256: %x\n", hash)
-
 }
