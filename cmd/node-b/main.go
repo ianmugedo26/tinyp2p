@@ -62,6 +62,31 @@ func main() {
 		fmt.Println("Failed to create a destination file:", err)
 		return
 	}
+	fmt.Println("Sending package request...")
+	//sending request for the code
+
+	_, err = fmt.Fprintln(conn, "GET demo-app-v1.0.0.tar.gz")
+	if err != nil {
+		fmt.Println("Failed to Send the Request:", err)
+		return
+	}
+	fmt.Println("Package request sent; waiting on the package....")
+
+	// Read the provider's response
+	reader := bufio.NewReader(conn)
+
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Failed to read response:", err)
+		return
+	}
+
+	response = strings.TrimSpace(response)
+
+	if response != "OK" {
+		fmt.Println("Package request rejected:", response)
+		return
+	}
 
 	// Receive exactly the advertised number of bytes
 
@@ -106,27 +131,4 @@ func main() {
 	fmt.Println("Package received:", outputPath)
 	fmt.Printf("SHA-256: %x\n", hash)
 
-	//sending request for the code
-
-	_, err = fmt.Fprintln(conn, "GET demo-app-v1.0.0.tar.gz")
-	if err != nil {
-		fmt.Println("Failed to Send the Request:", err)
-		return
-	}
-
-	// Read the provider's response
-	reader := bufio.NewReader(conn)
-
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		fmt.Println("Failed to read response:", err)
-		return
-	}
-
-	response = strings.TrimSpace(response)
-
-	if response != "OK" {
-		fmt.Println("Package request rejected:", response)
-		return
-	}
 }

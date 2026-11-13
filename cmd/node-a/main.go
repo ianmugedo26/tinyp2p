@@ -37,6 +37,7 @@ func handleConnection(conn net.Conn) {
 
 	reader := bufio.NewReader(conn)
 
+	fmt.Println("Waiting on the request...")
 	request, err := reader.ReadString('\n')
 	if err != nil {
 		if err == io.EOF {
@@ -44,6 +45,7 @@ func handleConnection(conn net.Conn) {
 		} else {
 			fmt.Print("Failed to read request:", err)
 		}
+		fmt.Println("Received request:", request)
 		return
 
 	}
